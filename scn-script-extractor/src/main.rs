@@ -169,6 +169,8 @@ fn main() {
     }
     writeln!(output_writer).unwrap();
 
+    let mut used_texts: Vec::<u64> = Vec::new();
+
     writeln!(output_writer, "[script]").unwrap();
     writeln!(output_writer, "# lines: {}\n", scripts.len()).unwrap();
     for (character, character_sub, text) in scripts.iter() {
@@ -191,6 +193,13 @@ fn main() {
         let text_str = ref_table.get_string(*text as usize).expect(&format!("Cannot find string reference # {}", text));
 
         writeln!(output_writer, "# {}", text_str).unwrap();
+        if used_texts.contains(text) {
+            write!(output_writer, "# ").unwrap();
+
+        } else {
+            used_texts.push(*text);
+        }
+
         writeln!(output_writer, "{} = {}\n", *text, Value::String(text_str.clone())).unwrap();
     }
 
