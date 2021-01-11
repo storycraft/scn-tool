@@ -91,7 +91,7 @@ fn main() {
             
                                                 PsbValue::List(text_list) => {
                                                     let list = read_items(3, text_list);
-                                                    
+
                                                     let mut character: Option<u64> = None;
                                                     let mut character_display: Option<u64> = None;
                                                     let text: u64;
@@ -232,7 +232,7 @@ fn read_items(count: usize, list: &PsbList) -> Vec<&PsbValue> {
         match child.unwrap() {
 
             PsbValue::List(child_list) => {
-                read_items(count - vec.len(), child_list);
+                vec.append(&mut read_items(count - vec.len(), child_list));
             }
 
             child => {
