@@ -1,14 +1,14 @@
-# xp3-tool
+# scn-tool
 
-Simple XP3 packing / unpacking tools.
+M2 scn scenario file text & string extract / insert tools.
 
 ## Usage
-### Packer
+### Extracter
 ```
-xp3-packer.exe <input_dir> <out_xp3>
+scn-script-extractor.exe <scn_file> [output_file]
 ```
 
-### Unpacker
+### Inserter
 ```
-xp3-unpacker.exe <input_xp3> <out_dir>
+scn-script-inserter.exe <toml_patch_file> <scn_file> [output_file]
 ```
