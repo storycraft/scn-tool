@@ -6,7 +6,7 @@
 
 use std::{env, fs::{self, File}, io::{BufWriter, Cursor, Read, Write}, path::Path};
 
-use emote_psb::{PsbReader, types::PsbValue};
+use emote_psb::{PsbReader, types::{PsbValue, collection::PsbList}};
 
 use toml::Value;
 
@@ -60,11 +60,11 @@ fn main() {
 
     let mut strings: Vec::<u64> = Vec::new();
 
-    if let PsbValue::Object(root) = root {
+    if let PsbValue::Object(root_obj) = &root {
         match scenes_id {
 
             Some(scenes_id) => {
-                let scenes = root.get_value(scenes_id as u64).expect("Root entry not found");
+                let scenes = root_obj.get_value(scenes_id as u64).expect("Root entry not found");
 
                 if let PsbValue::List(list) = scenes {
                     for scene in list.iter() {
@@ -90,24 +90,28 @@ fn main() {
                                             match text {
             
                                                 PsbValue::List(text_list) => {
+                                                    let list = read_items(3, text_list);
+                                                    
                                                     let mut character: Option<u64> = None;
                                                     let mut character_display: Option<u64> = None;
-                                                    let mut text: Option<u64> = None;
+                                                    let text: u64;
+
+                                                    if list.len() < 3 {
+                                                        continue;
+                                                    }
+
+                                                    if let PsbValue::String(text_entry) = list[2] {
+                                                        text = text_entry.ref_index();
+                                                    } else {
+                                                        continue;
+                                                    }
             
-                                                    if let PsbValue::String(character_entry) = &text_list.values()[0] {
+                                                    if let PsbValue::String(character_entry) = list[0] {
                                                         character = Some(character_entry.ref_index());
                                                     }
             
-                                                    if let PsbValue::String(character_display_entry) = &text_list.values()[1] {
+                                                    if let PsbValue::String(character_display_entry) = list[1] {
                                                         character_display = Some(character_display_entry.ref_index());
-                                                    }
-            
-                                                    if let PsbValue::String(text_entry) = &text_list.values()[2] {
-                                                        text = Some(text_entry.ref_index());
-                                                    }
-            
-                                                    if text.is_none() {
-                                                        continue;
                                                     }
             
                                                     if character.is_some() && !characters.contains(&character.unwrap()) {
@@ -118,7 +122,7 @@ fn main() {
                                                         characters_display.push(character_display.unwrap());
                                                     }
             
-                                                    scripts.push((character, character_display, text.unwrap()));
+                                                    scripts.push((character, character_display, text));
                                                 }
             
                                                 _ => {}
@@ -137,9 +141,7 @@ fn main() {
             }
 
             None => {
-                for i in 0..ref_table.strings().len() {
-                    strings.push(i as u64);
-                }
+                strings = collect_string_indices(&root);
             }
         }
     } else {
@@ -213,4 +215,67 @@ fn main() {
             writeln!(output_writer, "{} = {}", *string_id, Value::String(string.clone())).unwrap();
         }
     }
+
+}
+
+fn read_items(count: usize, list: &PsbList) -> Vec<&PsbValue> {
+    let mut vec = Vec::<&PsbValue>::with_capacity(count);
+
+    let iter = &mut list.iter();
+    while vec.len() < count {
+        let child = iter.next();
+
+        if child.is_none() {
+            return vec;
+        }
+
+        match child.unwrap() {
+
+            PsbValue::List(child_list) => {
+                read_items(count - vec.len(), child_list);
+            }
+
+            child => {
+                vec.push(child);
+            }
+        }
+
+    }
+
+    vec
+}
+
+fn collect_string_indices(root: &PsbValue) -> Vec<u64> {
+    let mut vec = Vec::new();
+
+    fn collect(current: &PsbValue, vec: &mut Vec<u64>) {
+        match current {
+
+            PsbValue::String(str_ref) => {
+                let index = str_ref.ref_index();
+                if !vec.contains(&index) {
+                    vec.push(index);
+                }
+            }
+
+            PsbValue::Object(obj) => {
+                for (_, value) in obj.iter() {
+                    collect(value, vec);
+                }
+            }
+
+            PsbValue::List(list) => {
+                for value in list.iter() {
+                    collect(value, vec);
+                }
+            }
+
+            _ => {}
+
+        }
+    }
+
+    collect(root, &mut vec);
+
+    vec
 }
