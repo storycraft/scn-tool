@@ -1,0 +1,10 @@
+[package]
+name = "scn-script-extractor"
+version = "0.1.0"
+authors = ["storycraft <storycraft@pancake.sh>"]
+edition = "2018"
+
+[dependencies]
+
+emote-psb = "0.1.0"
+toml = "0.5.8"
