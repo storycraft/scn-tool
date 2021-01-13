@@ -4,241 +4,238 @@
 name = "adler"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
 
 [[package]]
 name = "adler"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bedc89c5c7b5550ffb9372eb5c5ffc7f9f705cc3f4a128bd4669b9745f555093"
 
 [[package]]
 name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "byteorder"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae44d1a3d5a19df61dd0c8beb138458ac2a53a7ac09eba97d55592540004306b"
 
 [[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "crc32fast"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81156fece84ab6a9f2afdb109ce3ae577e42b1228441eded99bd77f627953b1a"
 dependencies = [
- "cfg-if 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfg-if",
 ]
 
 [[package]]
-name = "emote-psb"
-version = "0.1.0"
+name = "either"
+version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
+
+[[package]]
+name = "emote-psb"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5ebabaf2ca26378e3523f499d1302a8df5c7aff5004421d674da21da8e2672b"
 dependencies = [
- "adler 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "byteorder 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
- "flate2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "indexmap 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "adler 1.0.1",
+ "byteorder",
+ "encoding",
+ "flate2",
+ "itertools",
 ]
 
 [[package]]
 name = "encoding"
 version = "0.2.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b0d943856b990d12d3b55b359144ff341533e516d94098b1d3fc1ac666d36ec"
 dependencies = [
- "encoding-index-japanese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding-index-korean 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding-index-simpchinese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding-index-singlebyte 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding-index-tradchinese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding-index-japanese",
+ "encoding-index-korean",
+ "encoding-index-simpchinese",
+ "encoding-index-singlebyte",
+ "encoding-index-tradchinese",
 ]
 
 [[package]]
 name = "encoding-index-japanese"
 version = "1.20141219.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04e8b2ff42e9a05335dbf8b5c6f7567e5591d0d916ccef4e0b1710d32a0d0c91"
 dependencies = [
- "encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests",
 ]
 
 [[package]]
 name = "encoding-index-korean"
 version = "1.20141219.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dc33fb8e6bcba213fe2f14275f0963fd16f0a02c878e3095ecfdf5bee529d81"
 dependencies = [
- "encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests",
 ]
 
 [[package]]
 name = "encoding-index-simpchinese"
 version = "1.20141219.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d87a7194909b9118fc707194baa434a4e3b0fb6a5a757c73c3adb07aa25031f7"
 dependencies = [
- "encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests",
 ]
 
 [[package]]
 name = "encoding-index-singlebyte"
 version = "1.20141219.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3351d5acffb224af9ca265f435b859c7c01537c0849754d3db3fdf2bfe2ae84a"
 dependencies = [
- "encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests",
 ]
 
 [[package]]
 name = "encoding-index-tradchinese"
 version = "1.20141219.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd0e20d5688ce3cab59eb3ef3a2083a5c77bf496cb798dc6fcdb75f323890c18"
 dependencies = [
- "encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_index_tests",
 ]
 
 [[package]]
 name = "encoding_index_tests"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a246d82be1c9d791c5dfde9a2bd045fc3cbba3fa2b11ad558f27d01712f00569"
 
 [[package]]
 name = "flate2"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7411863d55df97a419aa64cb4d2f167103ea9d767e2c54a1868b7ac3f6b47129"
 dependencies = [
- "cfg-if 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "crc32fast 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.82 (registry+https://github.com/rust-lang/crates.io-index)",
- "miniz_oxide 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfg-if",
+ "crc32fast",
+ "libc",
+ "miniz_oxide",
 ]
 
 [[package]]
-name = "hashbrown"
-version = "0.9.1"
+name = "itertools"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "indexmap"
-version = "1.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37d572918e350e82412fe766d24b15e6682fb2ed2bbe018280caa810397cb319"
 dependencies = [
- "autocfg 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "hashbrown 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "either",
 ]
 
 [[package]]
 name = "libc"
 version = "0.2.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89203f3fba0a3795506acaad8ebce3c80c0af93f994d5a1d7a0b1eeb23271929"
 
 [[package]]
 name = "miniz_oxide"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f2d26ec3309788e423cfbf68ad1800f061638098d76a83681af979dc4eda19d"
 dependencies = [
- "adler 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "autocfg 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "adler 0.2.3",
+ "autocfg",
 ]
 
 [[package]]
 name = "proc-macro2"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
- "unicode-xid 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unicode-xid",
 ]
 
 [[package]]
 name = "quote"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "991431c3519a3f36861882da93630ce66b52918dcf1b8e2fd66b397fc96f28df"
 dependencies = [
- "proc-macro2 1.0.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2",
 ]
 
 [[package]]
 name = "scn-script-extractor"
 version = "0.1.0"
 dependencies = [
- "emote-psb 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "toml 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "emote-psb",
+ "toml",
 ]
 
 [[package]]
 name = "scn-script-inserter"
 version = "0.1.0"
 dependencies = [
- "emote-psb 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.118 (registry+https://github.com/rust-lang/crates.io-index)",
- "toml 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "emote-psb",
+ "serde",
+ "toml",
 ]
 
 [[package]]
 name = "serde"
 version = "1.0.118"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06c64263859d87aa2eb554587e2d23183398d617427327cf2b3d0ed8c69e4800"
 dependencies = [
- "serde_derive 1.0.118 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
 version = "1.0.118"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c84d3526699cd55261af4b941e4e725444df67aa4f9e6a3564f18030d12672df"
 dependencies = [
- "proc-macro2 1.0.24 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 1.0.58 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
 name = "syn"
 version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc60a3d73ea6594cd712d830cc1f0390fd71542d8c8cd24e70cc54cdfd5e05d5"
 dependencies = [
- "proc-macro2 1.0.24 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "unicode-xid 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2",
+ "quote",
+ "unicode-xid",
 ]
 
 [[package]]
 name = "toml"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
 dependencies = [
- "serde 1.0.118 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
 ]
 
 [[package]]
 name = "unicode-xid"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[metadata]
-"checksum adler 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
-"checksum adler 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bedc89c5c7b5550ffb9372eb5c5ffc7f9f705cc3f4a128bd4669b9745f555093"
-"checksum autocfg 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
-"checksum byteorder 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ae44d1a3d5a19df61dd0c8beb138458ac2a53a7ac09eba97d55592540004306b"
-"checksum cfg-if 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-"checksum crc32fast 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "81156fece84ab6a9f2afdb109ce3ae577e42b1228441eded99bd77f627953b1a"
-"checksum emote-psb 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d171b7e71bd2588358cfa31d5b471feb0480bb8305af22454b129fb9fa3f2e51"
-"checksum encoding 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "6b0d943856b990d12d3b55b359144ff341533e516d94098b1d3fc1ac666d36ec"
-"checksum encoding-index-japanese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)" = "04e8b2ff42e9a05335dbf8b5c6f7567e5591d0d916ccef4e0b1710d32a0d0c91"
-"checksum encoding-index-korean 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)" = "4dc33fb8e6bcba213fe2f14275f0963fd16f0a02c878e3095ecfdf5bee529d81"
-"checksum encoding-index-simpchinese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)" = "d87a7194909b9118fc707194baa434a4e3b0fb6a5a757c73c3adb07aa25031f7"
-"checksum encoding-index-singlebyte 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)" = "3351d5acffb224af9ca265f435b859c7c01537c0849754d3db3fdf2bfe2ae84a"
-"checksum encoding-index-tradchinese 1.20141219.5 (registry+https://github.com/rust-lang/crates.io-index)" = "fd0e20d5688ce3cab59eb3ef3a2083a5c77bf496cb798dc6fcdb75f323890c18"
-"checksum encoding_index_tests 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "a246d82be1c9d791c5dfde9a2bd045fc3cbba3fa2b11ad558f27d01712f00569"
-"checksum flate2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)" = "7411863d55df97a419aa64cb4d2f167103ea9d767e2c54a1868b7ac3f6b47129"
-"checksum hashbrown 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
-"checksum indexmap 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4fb1fa934250de4de8aef298d81c729a7d33d8c239daa3a7575e6b92bfc7313b"
-"checksum libc 0.2.82 (registry+https://github.com/rust-lang/crates.io-index)" = "89203f3fba0a3795506acaad8ebce3c80c0af93f994d5a1d7a0b1eeb23271929"
-"checksum miniz_oxide 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0f2d26ec3309788e423cfbf68ad1800f061638098d76a83681af979dc4eda19d"
-"checksum proc-macro2 1.0.24 (registry+https://github.com/rust-lang/crates.io-index)" = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
-"checksum quote 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)" = "991431c3519a3f36861882da93630ce66b52918dcf1b8e2fd66b397fc96f28df"
-"checksum serde 1.0.118 (registry+https://github.com/rust-lang/crates.io-index)" = "06c64263859d87aa2eb554587e2d23183398d617427327cf2b3d0ed8c69e4800"
-"checksum serde_derive 1.0.118 (registry+https://github.com/rust-lang/crates.io-index)" = "c84d3526699cd55261af4b941e4e725444df67aa4f9e6a3564f18030d12672df"
-"checksum syn 1.0.58 (registry+https://github.com/rust-lang/crates.io-index)" = "cc60a3d73ea6594cd712d830cc1f0390fd71542d8c8cd24e70cc54cdfd5e05d5"
-"checksum toml 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)" = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
-"checksum unicode-xid 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"
+checksum = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"

@@ -6,6 +6,6 @@ edition = "2018"
 
 [dependencies]
 
-emote-psb = "0.1.0"
+emote-psb = "0.3.2"
 toml = "0.5.8"
 serde = { version = "1.0.0", features = ["derive"] }

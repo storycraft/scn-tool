@@ -34,7 +34,7 @@ fn main() {
     let output_file = File::create(output_path).expect("Cannot create output file");
     let mut output_writer = BufWriter::new(output_file);
 
-    let mut input_scn = PsbReader::open_psb_file({
+    let mut input_scn = PsbReader::open_psb({
         let mut file = File::open(input_path).expect(&format!("Cannot open {}", input_path.to_str().unwrap()));
         let mut mem = Vec::new();
         file.read_to_end(&mut mem).expect("Cannot read input file");
@@ -42,14 +42,7 @@ fn main() {
         Cursor::new(mem)
     }).expect("Input file is invalid scn file");
 
-    let (_, root) = input_scn.read_root().expect("Cannot read entry point of input file");
-
-    let ref_table = input_scn.ref_table();
-
-    let scenes_id = ref_table.names().binary_search(&String::from("scenes")).ok();
-    let texts_id = ref_table.names().binary_search(&String::from("texts")).ok();
-
-    let title_id = ref_table.names().binary_search(&String::from("title")).ok();
+    let (_, strings_ref, _, _, root) = input_scn.load().expect("Cannot load scn input file").unwrap();
 
     writeln!(output_writer, "# {}\n", input_name).expect("Cannot write file header");
 
@@ -60,104 +53,100 @@ fn main() {
 
     let mut strings: Vec::<u64> = Vec::new();
 
-    if let PsbValue::Object(root_obj) = &root {
-        match scenes_id {
+    match root.get_value("scenes".into()) {
 
-            Some(scenes_id) => {
-                let scenes = root_obj.get_value(scenes_id as u64).expect("Root entry not found");
-
-                if let PsbValue::List(list) = scenes {
-                    for scene in list.iter() {
-        
-                        if let PsbValue::Object(scene) = scene {
-                            if title_id.is_some() {
-                                let title = scene.get_value(title_id.unwrap() as u64);
-                                
-                                if title.is_some() {
-                                    if let PsbValue::String(str_ref) = title.unwrap() {
-                                        if !titles.contains(&str_ref.ref_index()) {
-                                            titles.push(str_ref.ref_index());
-                                        }
+        Some(scenes) => {
+            if let PsbValue::List(list) = scenes {
+                for scene in list.iter() {
+                    if let PsbValue::Object(scene) = scene {
+                        match scene.get_value("title".into()) {
+                            Some(title) => {
+                                if let PsbValue::StringRef(str_ref) = title {
+                                    if !titles.contains(&str_ref.ref_index()) {
+                                        titles.push(str_ref.ref_index());
                                     }
                                 }
-                            }
+                            },
+
+                            None => {}
+                        }
+
+                        match scene.get_value("texts".into()) {
+                            Some(texts) => {
+                                if let PsbValue::List(texts) = texts {
+                                    for text in texts.iter() {
+                                        match text {
         
-                            if texts_id.is_some() {
-                                let texts = scene.get_value(texts_id.unwrap() as u64);
-                                if texts.is_some() {
-                                    if let PsbValue::List(texts) = texts.unwrap() {
-                                        for text in texts.iter() {
-                                            match text {
-            
-                                                PsbValue::List(text_list) => {
-                                                    let list = read_items(3, text_list);
+                                            PsbValue::List(text_list) => {
+                                                let list = read_items(3, text_list);
 
-                                                    let mut character: Option<u64> = None;
-                                                    let mut character_display: Option<u64> = None;
-                                                    let text: u64;
+                                                let mut character: Option<u64> = None;
+                                                let mut character_display: Option<u64> = None;
+                                                let text: u64;
 
-                                                    if list.len() < 3 {
-                                                        continue;
-                                                    }
-
-                                                    if let PsbValue::String(text_entry) = list[2] {
-                                                        text = text_entry.ref_index();
-                                                    } else {
-                                                        continue;
-                                                    }
-            
-                                                    if let PsbValue::String(character_entry) = list[0] {
-                                                        character = Some(character_entry.ref_index());
-                                                    }
-            
-                                                    if let PsbValue::String(character_display_entry) = list[1] {
-                                                        character_display = Some(character_display_entry.ref_index());
-                                                    }
-            
-                                                    if character.is_some() && !characters.contains(&character.unwrap()) {
-                                                        characters.push(character.unwrap());
-                                                    }
-            
-                                                    if character_display.is_some() && !characters_display.contains(&character_display.unwrap()) {
-                                                        characters_display.push(character_display.unwrap());
-                                                    }
-            
-                                                    scripts.push((character, character_display, text));
+                                                if list.len() < 3 {
+                                                    continue;
                                                 }
-            
-                                                _ => {}
+
+                                                if let PsbValue::StringRef(text_entry) = list[2] {
+                                                    text = text_entry.ref_index();
+                                                } else {
+                                                    continue;
+                                                }
+        
+                                                if let PsbValue::StringRef(character_entry) = list[0] {
+                                                    character = Some(character_entry.ref_index());
+                                                }
+        
+                                                if let PsbValue::StringRef(character_display_entry) = list[1] {
+                                                    character_display = Some(character_display_entry.ref_index());
+                                                }
+        
+                                                if character.is_some() && !characters.contains(&character.unwrap()) {
+                                                    characters.push(character.unwrap());
+                                                }
+        
+                                                if character_display.is_some() && !characters_display.contains(&character_display.unwrap()) {
+                                                    characters_display.push(character_display.unwrap());
+                                                }
+        
+                                                scripts.push((character, character_display, text));
                                             }
+        
+                                            _ => {}
                                         }
-                                    } else {
-                                        panic!("texts entry is invalid")
                                     }
+                                } else {
+                                    panic!("texts entry is invalid")
                                 }
+                            },
+
+                            None => {
+
                             }
                         }
                     }
-                } else {
-                    panic!("scenes entry is invalid")
                 }
-            }
-
-            None => {
-                strings = collect_string_indices(&root);
+            } else {
+                panic!("scenes entry is invalid")
             }
         }
-    } else {
-        panic!("Input file is invalid scn file")
+
+        None => {
+            strings = collect_string_indices(&PsbValue::Object(root));
+        }
     }
 
     writeln!(output_writer, "[info]").unwrap();
     for title in titles.iter() {
-        let title_str = ref_table.get_string(*title as usize).expect(&format!("Cannot find string reference # {}", title));
+        let title_str = strings_ref.get(*title as usize).expect(&format!("Cannot find string reference # {}", title));
         writeln!(output_writer, "{} = {}", *title, Value::String(title_str.clone())).unwrap();
     }
     writeln!(output_writer).unwrap();
 
     writeln!(output_writer, "[characters]").unwrap();
     for character in characters.iter() {
-        let character_str = ref_table.get_string(*character as usize).expect(&format!("Cannot find string reference # {}", character));
+        let character_str = strings_ref.get(*character as usize).expect(&format!("Cannot find string reference # {}", character));
 
         writeln!(output_writer, "{} = {}", *character, Value::String(character_str.clone())).unwrap();
     }
@@ -165,7 +154,7 @@ fn main() {
 
     writeln!(output_writer, "[character_subs]").unwrap();
     for character_sub in characters_display.iter() {
-        let character_sub_str = ref_table.get_string(*character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
+        let character_sub_str = strings_ref.get(*character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
 
         writeln!(output_writer, "{} = {}", *character_sub, Value::String(character_sub_str.clone())).unwrap();
     }
@@ -178,7 +167,7 @@ fn main() {
     for (character, character_sub, text) in scripts.iter() {
         if character.is_some() {
             let character = character.unwrap();
-            let character_str = ref_table.get_string(character as usize).expect(&format!("Cannot find string reference # {}", character));
+            let character_str = strings_ref.get(character as usize).expect(&format!("Cannot find string reference # {}", character));
 
             writeln!(output_writer, "# {}", character_str).unwrap();
         } else {
@@ -187,12 +176,12 @@ fn main() {
 
         if character_sub.is_some() {
             let character_sub = character_sub.unwrap();
-            let character_sub_str = ref_table.get_string(character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
+            let character_sub_str = strings_ref.get(character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
 
             writeln!(output_writer, "# display as {}", character_sub_str).unwrap();
         }
 
-        let text_str = ref_table.get_string(*text as usize).expect(&format!("Cannot find string reference # {}", text));
+        let text_str = strings_ref.get(*text as usize).expect(&format!("Cannot find string reference # {}", text));
 
         writeln!(output_writer, "# {}", text_str).unwrap();
         if used_texts.contains(text) {
@@ -210,7 +199,7 @@ fn main() {
         writeln!(output_writer, "# count: {}\n", strings.len()).unwrap();
 
         for string_id in strings.iter() {
-            let string = ref_table.get_string(*string_id as usize).expect(&format!("Cannot find string reference # {}", string_id));
+            let string = strings_ref.get(*string_id as usize).expect(&format!("Cannot find string reference # {}", string_id));
     
             writeln!(output_writer, "{} = {}", *string_id, Value::String(string.clone())).unwrap();
         }
@@ -251,7 +240,7 @@ fn collect_string_indices(root: &PsbValue) -> Vec<u64> {
     fn collect(current: &PsbValue, vec: &mut Vec<u64>) {
         match current {
 
-            PsbValue::String(str_ref) => {
+            PsbValue::StringRef(str_ref) => {
                 let index = str_ref.ref_index();
                 if !vec.contains(&index) {
                     vec.push(index);

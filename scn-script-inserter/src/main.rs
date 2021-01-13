@@ -1,6 +1,6 @@
-use std::{collections::HashMap, env, fs::File, io::{BufReader, BufWriter, Cursor, Read}, path::Path};
+use std::{collections::HashMap, env, fs::{self, File}, io::{self, BufReader, BufWriter, Cursor, Read, Seek, SeekFrom}, path::Path};
 
-use emote_psb::{PsbReader, writer::PsbWriter};
+use emote_psb::{PsbReader, header::PsbHeader, offsets::{PsbOffsets, PsbStringOffset}, writer::PsbWriter};
 
 use serde::{Serialize, Deserialize};
 
@@ -34,25 +34,30 @@ fn main() {
 
     let output_path = Path::new(args.get(3).unwrap_or(&default_output_path));
 
-    let mut psb = PsbReader::open_psb_file({
-        let mut mem = Vec::new();
+    let mut raw_psb = Vec::new();
 
-        BufReader::new(
-            File::open(scn_path).expect("Cannot open scn file")
-        ).read_to_end(&mut mem).unwrap();
-        
-        Cursor::new(mem)
-    }).expect("Input scn file is invalid");
+    BufReader::new(
+        File::open(scn_path).expect("Cannot open scn file")
+    ).read_to_end(&mut raw_psb).unwrap();
 
-    let (_, root) = psb.read_root().expect("scn entry is invalid");
+    // 헤더 읽기
+    let (_, header) = {
+        let mut cursor = Cursor::new(&mut raw_psb);
+        cursor.set_position(4);
+        PsbHeader::from_bytes(&mut cursor).expect("Cannot read header")
+    };
 
-    let mut ref_table = psb.ref_table().clone();
+    // 오프셋 로딩
+    let (_, mut offsets) = {
+        let mut cursor = Cursor::new(&mut raw_psb);
+        cursor.set_position(12);
+        PsbOffsets::from_bytes(header.version, &mut cursor).expect("Cannot read string offsets")
+    };
 
+    // 패치 파일 로딩
     let raw_patch_file = {
         let mut mem = Vec::new();
-
         BufReader::new(&mut patch_file).read_to_end(&mut mem).expect("Cannot read patch file");
-
         mem
     };
 
@@ -64,17 +69,44 @@ fn main() {
         .chain(patch_file.script.string_keys.iter())
         .chain(patch_file.strings.string_keys.iter());
 
+    let (strings_read, mut strings) = {
+        let mut cursor = Cursor::new(&mut raw_psb);
+
+        cursor.set_position(offsets.strings.offset_pos as u64);
+        
+        PsbReader::read_strings(offsets.strings.data_pos, &mut cursor).expect("Cannot read strings")
+    };
+
     for (key, patch) in chain {
         let key: usize = key.parse().unwrap();
 
-        ref_table.strings_mut()[key] = patch.clone();
+        strings[key] = patch.clone();
     }
 
     let mut output_file = File::create(output_path).expect("Cannot create output file");
+    // 앞부분 복사
+    io::copy(&mut Cursor::new(&mut raw_psb[..offsets.strings.offset_pos as usize]), &mut output_file).expect("Cannot copy source file");
 
-    let writer = PsbWriter::new(psb.header(), ref_table, root, BufWriter::new(&mut output_file));
+    // 문자열 덮어쓰기
+    let (new_string_written, new_string_offsets) = PsbWriter::write_strings(&strings, &mut output_file).expect("Cannot write strings");
 
-    writer.finish().expect("Cannot write patched scn file");
+    // 뒷부분 복사
+    io::copy(&mut Cursor::new(&mut raw_psb[(offsets.strings.offset_pos as u64 + strings_read) as usize..]), &mut output_file).expect("Cannot copy source file trail");
+
+    // 리소스 오프셋 업데이트
+    let diff = new_string_written as i32 - strings_read as i32;
+    
+    offsets.resources.offset_pos = (offsets.resources.offset_pos as i32 + diff) as u32;
+    offsets.resources.data_pos = (offsets.resources.data_pos as i32 + diff) as u32;
+    offsets.resources.lengths_pos = (offsets.resources.lengths_pos as i32 + diff) as u32;
+    offsets.strings = new_string_offsets;
+    // 오프셋 업데이트
+    {
+        let mut writer = BufWriter::new(&mut output_file);
+
+        writer.seek(SeekFrom::Start(12)).unwrap();
+        offsets.write_bytes(header.version, &mut writer).expect("Cannot patch string offsets");
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
