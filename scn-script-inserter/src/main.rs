@@ -67,7 +67,8 @@ fn main() {
         .chain(patch_file.characters.string_keys.iter())
         .chain(patch_file.character_subs.string_keys.iter()) 
         .chain(patch_file.script.string_keys.iter())
-        .chain(patch_file.strings.string_keys.iter());
+        .chain(patch_file.strings.string_keys.iter())
+        .chain(patch_file.selections.string_keys.iter());
 
     let (strings_read, mut strings) = {
         let mut cursor = Cursor::new(&mut raw_psb);
@@ -124,6 +125,10 @@ struct PatchFile {
     pub characters: StringPatchSet,
     pub character_subs: StringPatchSet,
     pub script: StringPatchSet,
+
+    #[serde(default)]
+    pub selections: StringPatchSet,
+
     #[serde(default)]
     pub strings: StringPatchSet
 
