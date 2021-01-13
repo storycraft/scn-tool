@@ -53,12 +53,15 @@ fn main() {
 
     let mut strings: Vec::<u64> = Vec::new();
 
+    let mut select_infos: Vec::<u64> = Vec::new();
+
     match root.get_value("scenes".into()) {
 
         Some(scenes) => {
             if let PsbValue::List(list) = scenes {
                 for scene in list.iter() {
                     if let PsbValue::Object(scene) = scene {
+                        // 타이틀 수집
                         match scene.get_value("title".into()) {
                             Some(title) => {
                                 if let PsbValue::StringRef(str_ref) = title {
@@ -71,6 +74,7 @@ fn main() {
                             None => {}
                         }
 
+                        // 대사 수집
                         match scene.get_value("texts".into()) {
                             Some(texts) => {
                                 if let PsbValue::List(texts) = texts {
@@ -125,6 +129,76 @@ fn main() {
 
                             }
                         }
+
+                        // 선택지 정보
+                        match scene.get_value("selectInfo".into()) {
+
+                            Some(select_info) => {
+                                if let PsbValue::Object(sel) = select_info {
+                                    match sel.get_value("select".into()) {
+
+                                        Some(sel) => {
+                                            if let PsbValue::List(select) = sel {
+                                                for select_item in select.iter() {
+                                                    if let PsbValue::Object(item) = select_item {
+                                                        match item.get_value("runLineStr".into()) {
+
+                                                            Some(run_line_str) => {
+                                                                if let PsbValue::StringRef(str_ref) = run_line_str {
+                                                                    select_infos.push(str_ref.ref_index())
+                                                                }
+                                                            }
+
+                                                            None => {}
+                                                        }
+
+                                                        match item.get_value("text".into()) {
+
+                                                            Some(text_str) => {
+                                                                if let PsbValue::StringRef(str_ref) = text_str {
+                                                                    select_infos.push(str_ref.ref_index())
+                                                                }
+                                                            }
+
+                                                            None => {}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+
+                                        None => {}
+                                    }
+                                }
+                            },
+
+                            None => {}
+                        }
+                        
+                        // 선택지
+                        match scene.get_value("selects".into()) {
+
+                            Some(selects) => {
+                                if let PsbValue::List(select_list) = selects {
+                                    for select in select_list.iter() {
+                                        if let PsbValue::Object(select) = select {
+                                            match select.get_value("text".into()) {
+
+                                                Some(text) => {
+                                                    if let PsbValue::StringRef(str_ref) = text {
+                                                        select_infos.push(str_ref.ref_index());
+                                                    }
+                                                }
+
+                                                None => {}
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+
+                            None => {}
+                        }
                     }
                 }
             } else {
@@ -137,31 +211,54 @@ fn main() {
         }
     }
 
+    let mut used_texts: Vec::<u64> = Vec::new();
+
+    // scn 정보
     writeln!(output_writer, "[info]").unwrap();
     for title in titles.iter() {
         let title_str = strings_ref.get(*title as usize).expect(&format!("Cannot find string reference # {}", title));
+
+        if used_texts.contains(title) {
+            write!(output_writer, "# ").unwrap();
+        } else {
+            used_texts.push(*title);
+        }
+
         writeln!(output_writer, "{} = {}", *title, Value::String(title_str.clone())).unwrap();
     }
     writeln!(output_writer).unwrap();
 
+    // 등장 인물
     writeln!(output_writer, "[characters]").unwrap();
     for character in characters.iter() {
         let character_str = strings_ref.get(*character as usize).expect(&format!("Cannot find string reference # {}", character));
+
+        if used_texts.contains(character) {
+            write!(output_writer, "# ").unwrap();
+        } else {
+            used_texts.push(*character);
+        }
 
         writeln!(output_writer, "{} = {}", *character, Value::String(character_str.clone())).unwrap();
     }
     writeln!(output_writer).unwrap();
 
+    // 등장 인물 이름 치환
     writeln!(output_writer, "[character_subs]").unwrap();
     for character_sub in characters_display.iter() {
         let character_sub_str = strings_ref.get(*character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
+
+        if used_texts.contains(character_sub) {
+            write!(output_writer, "# ").unwrap();
+        } else {
+            used_texts.push(*character_sub);
+        }
 
         writeln!(output_writer, "{} = {}", *character_sub, Value::String(character_sub_str.clone())).unwrap();
     }
     writeln!(output_writer).unwrap();
 
-    let mut used_texts: Vec::<u64> = Vec::new();
-
+    // 대사
     writeln!(output_writer, "[script]").unwrap();
     writeln!(output_writer, "# lines: {}\n", scripts.len()).unwrap();
     for (character, character_sub, text) in scripts.iter() {
@@ -186,7 +283,6 @@ fn main() {
         writeln!(output_writer, "# {}", text_str).unwrap();
         if used_texts.contains(text) {
             write!(output_writer, "# ").unwrap();
-
         } else {
             used_texts.push(*text);
         }
@@ -194,12 +290,36 @@ fn main() {
         writeln!(output_writer, "{} = {}\n", *text, Value::String(text_str.clone())).unwrap();
     }
 
+    // 선택지
+    if select_infos.len() > 0 {
+        writeln!(output_writer, "[selections]").unwrap();
+
+        for select_id in select_infos.iter() {
+            let string = strings_ref.get(*select_id as usize).expect(&format!("Cannot find string reference # {}", select_id));
+
+            if used_texts.contains(select_id) {
+                write!(output_writer, "# ").unwrap();
+            } else {
+                used_texts.push(*select_id);
+            }
+
+            writeln!(output_writer, "{} = {}", *select_id, Value::String(string.clone())).unwrap();
+        }
+    }
+
+    // 문자열
     if strings.len() > 0 {
         writeln!(output_writer, "[strings]").unwrap();
         writeln!(output_writer, "# count: {}\n", strings.len()).unwrap();
 
         for string_id in strings.iter() {
             let string = strings_ref.get(*string_id as usize).expect(&format!("Cannot find string reference # {}", string_id));
+
+            if used_texts.contains(string_id) {
+                write!(output_writer, "# ").unwrap();
+            } else {
+                used_texts.push(*string_id);
+            }
     
             writeln!(output_writer, "{} = {}", *string_id, Value::String(string.clone())).unwrap();
         }
