@@ -99,6 +99,14 @@ fn main() {
     offsets.resources.offset_pos = (offsets.resources.offset_pos as i32 + diff) as u32;
     offsets.resources.data_pos = (offsets.resources.data_pos as i32 + diff) as u32;
     offsets.resources.lengths_pos = (offsets.resources.lengths_pos as i32 + diff) as u32;
+
+    if header.version > 3 {
+        let extra = offsets.extra.unwrap();
+        offsets.extra.unwrap().offset_pos = (extra.offset_pos as i32 + diff) as u32;
+        offsets.extra.unwrap().data_pos = (extra.data_pos as i32 + diff) as u32;
+        offsets.extra.unwrap().lengths_pos = (extra.lengths_pos as i32 + diff) as u32;
+    }
+
     offsets.strings = new_string_offsets;
     // 오프셋 업데이트
     {
