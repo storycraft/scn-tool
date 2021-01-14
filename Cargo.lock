@@ -59,6 +59,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "emote-psb"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5726783feee87f0effb3e756f3f88e01594be4b47ebd742c70393f20692fb03"
+dependencies = [
+ "adler 1.0.1",
+ "byteorder",
+ "encoding",
+ "flate2",
+ "itertools",
+ "serde",
+]
+
+[[package]]
 name = "encoding"
 version = "0.2.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -144,6 +158,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "itoa"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
+
+[[package]]
 name = "libc"
 version = "0.2.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,10 +198,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
+
+[[package]]
+name = "scn-compiler"
+version = "0.1.0"
+dependencies = [
+ "emote-psb 0.5.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "scn-decompiler"
+version = "0.1.0"
+dependencies = [
+ "emote-psb 0.5.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "scn-script-extractor"
 version = "0.1.0"
 dependencies = [
- "emote-psb",
+ "emote-psb 0.3.3",
  "toml",
 ]
 
@@ -189,7 +233,7 @@ dependencies = [
 name = "scn-script-inserter"
 version = "0.1.0"
 dependencies = [
- "emote-psb",
+ "emote-psb 0.3.3",
  "serde",
  "toml",
 ]
@@ -212,6 +256,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.61"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fceb2595057b6891a4ee808f70054bd2d12f0e97f1cbb78689b59f676df325a"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
