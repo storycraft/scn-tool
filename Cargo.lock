@@ -47,9 +47,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "emote-psb"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5ebabaf2ca26378e3523f499d1302a8df5c7aff5004421d674da21da8e2672b"
+checksum = "eb43dbd8fa227687d7438009bf9db1e780118edfd3c3dbbf8c8a08d3df900474"
 dependencies = [
  "adler 1.0.1",
  "byteorder",

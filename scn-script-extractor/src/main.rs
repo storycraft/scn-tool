@@ -44,6 +44,7 @@ fn main() {
 
     let (_, strings_ref, _, _, root) = input_scn.load().expect("Cannot load scn input file").unwrap();
 
+    // 헤더 주석 작성
     writeln!(output_writer, "# {}\n", input_name).expect("Cannot write file header");
 
     let mut scripts: Vec::<(Option<u64>, Option<u64>, u64)> = Vec::new();
@@ -55,6 +56,7 @@ fn main() {
 
     let mut select_infos: Vec::<u64> = Vec::new();
 
+    // 정보 수집
     match root.get_value("scenes".into()) {
 
         Some(scenes) => {
@@ -215,47 +217,17 @@ fn main() {
 
     // scn 정보
     writeln!(output_writer, "[info]").unwrap();
-    for title in titles.iter() {
-        let title_str = strings_ref.get(*title as usize).expect(&format!("Cannot find string reference # {}", title));
-
-        if used_texts.contains(title) {
-            write!(output_writer, "# ").unwrap();
-        } else {
-            used_texts.push(*title);
-        }
-
-        writeln!(output_writer, "{} = {}", *title, Value::String(title_str.clone())).unwrap();
-    }
+    write_properties(&titles, &mut used_texts, &strings_ref, &mut output_writer);
     writeln!(output_writer).unwrap();
 
     // 등장 인물
     writeln!(output_writer, "[characters]").unwrap();
-    for character in characters.iter() {
-        let character_str = strings_ref.get(*character as usize).expect(&format!("Cannot find string reference # {}", character));
-
-        if used_texts.contains(character) {
-            write!(output_writer, "# ").unwrap();
-        } else {
-            used_texts.push(*character);
-        }
-
-        writeln!(output_writer, "{} = {}", *character, Value::String(character_str.clone())).unwrap();
-    }
+    write_properties(&characters, &mut used_texts, &strings_ref, &mut output_writer);
     writeln!(output_writer).unwrap();
 
     // 등장 인물 이름 치환
     writeln!(output_writer, "[character_subs]").unwrap();
-    for character_sub in characters_display.iter() {
-        let character_sub_str = strings_ref.get(*character_sub as usize).expect(&format!("Cannot find string reference # {}", character_sub));
-
-        if used_texts.contains(character_sub) {
-            write!(output_writer, "# ").unwrap();
-        } else {
-            used_texts.push(*character_sub);
-        }
-
-        writeln!(output_writer, "{} = {}", *character_sub, Value::String(character_sub_str.clone())).unwrap();
-    }
+    write_properties(&characters_display, &mut used_texts, &strings_ref, &mut output_writer);
     writeln!(output_writer).unwrap();
 
     // 대사
@@ -294,35 +266,15 @@ fn main() {
     if select_infos.len() > 0 {
         writeln!(output_writer, "[selections]").unwrap();
 
-        for select_id in select_infos.iter() {
-            let string = strings_ref.get(*select_id as usize).expect(&format!("Cannot find string reference # {}", select_id));
-
-            if used_texts.contains(select_id) {
-                write!(output_writer, "# ").unwrap();
-            } else {
-                used_texts.push(*select_id);
-            }
-
-            writeln!(output_writer, "{} = {}", *select_id, Value::String(string.clone())).unwrap();
-        }
+        write_properties(&select_infos, &mut used_texts, &strings_ref, &mut output_writer);
     }
 
     // 문자열
     if strings.len() > 0 {
         writeln!(output_writer, "[strings]").unwrap();
         writeln!(output_writer, "# count: {}\n", strings.len()).unwrap();
-
-        for string_id in strings.iter() {
-            let string = strings_ref.get(*string_id as usize).expect(&format!("Cannot find string reference # {}", string_id));
-
-            if used_texts.contains(string_id) {
-                write!(output_writer, "# ").unwrap();
-            } else {
-                used_texts.push(*string_id);
-            }
-    
-            writeln!(output_writer, "{} = {}", *string_id, Value::String(string.clone())).unwrap();
-        }
+        
+        write_properties(&strings, &mut used_texts, &strings_ref, &mut output_writer);
     }
 
 }
@@ -387,4 +339,18 @@ fn collect_string_indices(root: &PsbValue) -> Vec<u64> {
     collect(root, &mut vec);
 
     vec
+}
+
+fn write_properties(list: &Vec<u64>, used_list: &mut Vec<u64>, refs: &Vec<String>, stream: &mut impl Write) {
+    for string_id in list.iter() {
+        let string = refs.get(*string_id as usize).expect(&format!("Cannot find string reference # {}", string_id));
+
+        if used_list.contains(string_id) {
+            write!(stream, "# ").unwrap();
+        } else {
+            used_list.push(*string_id);
+        }
+
+        writeln!(stream, "{} = {}", *string_id, Value::String(string.clone())).unwrap();
+    }
 }
