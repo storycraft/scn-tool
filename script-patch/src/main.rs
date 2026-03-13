@@ -35,7 +35,7 @@ fn run(app: App) -> anyhow::Result<()> {
         let mut path = app.scn_file.clone();
         path.set_file_name(format!(
             "{}.patched.scn",
-            app.scn_file.file_name().unwrap().to_string_lossy()
+            app.scn_file.file_stem().unwrap().to_string_lossy()
         ));
         path
     });
