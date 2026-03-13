@@ -4,7 +4,7 @@ use emote_psb::{
     psb::{read::PsbFile, write::PsbWriter},
     value::PsbValue,
 };
-use scn_script_common::Script;
+use scn_script_common::{Script, Text};
 use std::{
     fs::File,
     io::{BufReader, BufWriter},
@@ -61,29 +61,27 @@ fn run(app: App) -> anyhow::Result<()> {
 
 fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
     // query scenes
-    let scenes = root.query(3)?;
+    let scenes = root.query_str("scenes")?;
     for (i, scene) in script.scenes.iter().enumerate() {
         let scn_scene = scenes.query(i as _)?;
         // set title
-        *scn_scene.query(-1)? = PsbValue::String(From::from(&scene.title));
+        *scn_scene.query_str("title")? = PsbValue::String(From::from(&scene.title));
 
         if !scene.texts.is_empty() {
             // query texts
-            let texts = scn_scene.query(5)?;
+            let texts = scn_scene.query_str("texts")?;
             for (i, text) in scene.texts.iter().enumerate() {
                 let scn_text = texts.query(i as _)?;
-                *scn_text.query(0)? = map_str(text.name.as_deref());
-                *scn_text.query(1)? = map_str(text.display_name.as_deref());
-                *scn_text.query(2)? = PsbValue::String(From::from(&text.text));
+                patch_flatten_text(scn_text, text).context("applying text patch to scn")?;
             }
         }
 
         if !scene.selects.is_empty() {
             // query selectInfo/selects
-            let selects = scn_scene.query(3)?.query(0)?;
+            let selects = scn_scene.query_str("selectInfo")?.query_str("selects")?;
             for (i, select) in scene.selects.iter().enumerate() {
                 let scn_select = selects.query(i as _)?;
-                *scn_select.query(5)? = PsbValue::String(From::from(&select.text));
+                *scn_select.query_str("text")? = PsbValue::String(From::from(&select.text));
             }
         }
     }
@@ -91,14 +89,54 @@ fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn map_str(string: Option<&str>) -> PsbValue {
-    string
-        .map(|name| PsbValue::String(name.into()))
-        .unwrap_or(PsbValue::Null)
+fn patch_flatten_text(scn_text: &mut PsbValue, text: &Text) -> anyhow::Result<()> {
+    fn write_flatten(slot: &[Option<&str>], v: &mut PsbValue) -> anyhow::Result<usize> {
+        let Some(&string) = slot.first() else {
+            return Ok(0);
+        };
+
+        match v {
+            PsbValue::List(list) => {
+                let mut offset = 0;
+                for child in list {
+                    offset += write_flatten(&slot[offset..], child)?;
+                    if offset >= slot.len() {
+                        break;
+                    }
+                }
+
+                Ok(offset)
+            }
+
+            v => {
+                *v = if let Some(string) = string {
+                    PsbValue::String(string.into())
+                } else {
+                    PsbValue::Null
+                };
+                Ok(1)
+            }
+        }
+    }
+
+    let written = write_flatten(
+        &[
+            text.name.as_deref(),
+            text.display_name.as_deref(),
+            text.text.as_deref(),
+        ],
+        scn_text,
+    )?;
+    if written != 3 {
+        bail!("fail to patch scn text correctly. Unsupported or invalid");
+    }
+
+    Ok(())
 }
 
 trait QueryExt {
     fn query(&mut self, index: isize) -> anyhow::Result<&mut PsbValue>;
+    fn query_str(&mut self, key: &str) -> anyhow::Result<&mut PsbValue>;
 }
 
 impl QueryExt for PsbValue {
@@ -113,7 +151,7 @@ impl QueryExt for PsbValue {
 
                 Ok(obj
                     .get_index_mut(i)
-                    .with_context(|| format!("invalid path: {} in list", index))?
+                    .with_context(|| format!("invalid path: {} in object", index))?
                     .1)
             }
             Self::List(list) => {
@@ -127,6 +165,15 @@ impl QueryExt for PsbValue {
                     .with_context(|| format!("invalid path: {} in list", index))
             }
             _ => bail!("invalid path: {}", index),
+        }
+    }
+
+    fn query_str(&mut self, key: &str) -> anyhow::Result<&mut PsbValue> {
+        match self {
+            Self::Object(obj) => obj
+                .get_mut(key)
+                .with_context(|| format!("invalid path: {} in object", key)),
+            _ => bail!("invalid path: {}", key),
         }
     }
 }
