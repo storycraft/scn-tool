@@ -50,6 +50,7 @@ fn run(app: App) -> anyhow::Result<()> {
     let scn_script = input_scn
         .deserialize_root::<ScnScript>()
         .context("deserializing scn")?;
+
     let script = Script {
         scenes: scn_script
             .scenes
@@ -59,7 +60,7 @@ fn run(app: App) -> anyhow::Result<()> {
                     title: scn_scene.title,
                     texts: scn_scene
                         .texts
-                        .iter()
+                        .into_iter()
                         .map(read_flatten_text)
                         .collect::<anyhow::Result<Vec<_>>>()
                         .context("collecting text from scn")?,
@@ -89,8 +90,8 @@ struct ScnScene {
     pub selects: Vec<Select>,
 }
 
-fn read_flatten_text(text: &PsbValue) -> anyhow::Result<Text> {
-    fn read_flatten(slot: &mut [Option<String>], v: &PsbValue) -> anyhow::Result<usize> {
+fn read_flatten_text(text: PsbValue) -> anyhow::Result<Text> {
+    fn read_flatten(slot: &mut [Option<String>], v: PsbValue) -> anyhow::Result<usize> {
         if slot.is_empty() {
             return Ok(0);
         }
@@ -102,7 +103,7 @@ fn read_flatten_text(text: &PsbValue) -> anyhow::Result<Text> {
             }
 
             PsbValue::String(string) => {
-                slot[0] = Some(string.to_string());
+                slot[0] = Some(string);
                 Ok(1)
             }
 
