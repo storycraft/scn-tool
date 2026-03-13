@@ -40,12 +40,12 @@ fn run(app: App) -> anyhow::Result<()> {
         fs::create_dir_all(parent).context("creating output directory")?;
     }
 
-    let out = BufWriter::new(File::create(output_path).context("creating output file")?);
-
     let mut input_scn = PsbFile::open(BufReader::new(
         File::open(&input_path).context("cannot open input file")?,
     ))
     .context("input file is invalid scn")?;
+
+    let out = BufWriter::new(File::create(output_path).context("creating output file")?);
 
     let scn_script = input_scn
         .deserialize_root::<ScnScript>()
