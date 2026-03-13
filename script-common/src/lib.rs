@@ -12,27 +12,8 @@ pub struct Scene {
     #[serde(default)]
     pub texts: Vec<Text>,
 
-    #[serde(default, deserialize_with = "deserialize_selects")]
+    #[serde(default)]
     pub selects: Vec<Select>,
-}
-
-fn deserialize_selects<'de, D>(de: D) -> Result<Vec<Select>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    struct Wrapper {
-        #[serde(rename = "selectInfo")]
-        #[serde(default)]
-        select_info: Wrapper2,
-    }
-    #[derive(Deserialize, Default)]
-    struct Wrapper2 {
-        #[serde(default)]
-        selects: Vec<Select>,
-    }
-
-    Ok(Wrapper::deserialize(de)?.select_info.selects)
 }
 
 #[derive(Debug, Clone, Serialize)]
