@@ -1,0 +1,14 @@
+[package]
+name = "scn-compiler"
+version = "0.1.0"
+authors = ["storycraft <storycraft@pancake.sh>"]
+edition = "2024"
+
+[dependencies]
+emote-psb = { workspace = true }
+
+clap = { version = "4.5.60", features = ["derive"] }
+serde-query = "0.2.0"
+anyhow = "1.0.102"
+serde = "1.0.228"
+serde_json = { version = "1.0.149", features = ["preserve_order"] }

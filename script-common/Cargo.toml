@@ -1,0 +1,9 @@
+[package]
+name = "scn-script-common"
+version = "0.1.0"
+authors = ["storycraft <storycraft@pancake.sh>"]
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde-query = "0.2.0"

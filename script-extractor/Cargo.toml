@@ -1,0 +1,15 @@
+[package]
+name = "scn-script-extractor"
+version = "0.1.0"
+authors = ["storycraft <storycraft@pancake.sh>"]
+edition = "2018"
+
+[dependencies]
+emote-psb = { workspace = true }
+scn-script-common = { workspace = true }
+
+clap = { version = "4.5.60", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde-query = "0.2.0"
+anyhow = "1.0.102"
+serde_json = "1.0.149"
