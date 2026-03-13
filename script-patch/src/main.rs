@@ -44,7 +44,7 @@ fn run(app: App) -> anyhow::Result<()> {
         File::open(&app.json_patch_file).context("patch file does not exist")?,
     ))
     .context("reading patch file")?;
-    patch(&script, &mut root).context("patching scn")?;
+    patch(script, &mut root).context("patching scn")?;
 
     PsbWriter::new(
         psb.version,
@@ -59,10 +59,10 @@ fn run(app: App) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
+fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
     // query scenes
     let scenes = root.query_str("scenes")?;
-    for (i, scene) in script.scenes.iter().enumerate() {
+    for (i, scene) in script.scenes.into_iter().enumerate() {
         let scn_scene = scenes.query(i as _)?;
         // set title
         *scn_scene.query_str("title")? = PsbValue::String(From::from(&scene.title));
@@ -70,7 +70,7 @@ fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
         if !scene.texts.is_empty() {
             // query texts
             let texts = scn_scene.query_str("texts")?;
-            for (i, text) in scene.texts.iter().enumerate() {
+            for (i, text) in scene.texts.into_iter().enumerate() {
                 let scn_text = texts.query(i as _)?;
                 patch_flatten_text(scn_text, text).context("applying text patch to scn")?;
             }
@@ -79,7 +79,7 @@ fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
         if !scene.selects.is_empty() {
             // query selectInfo/selects
             let selects = scn_scene.query_str("selectInfo")?.query_str("selects")?;
-            for (i, select) in scene.selects.iter().enumerate() {
+            for (i, select) in scene.selects.into_iter().enumerate() {
                 let scn_select = selects.query(i as _)?;
                 *scn_select.query_str("text")? = PsbValue::String(From::from(&select.text));
             }
@@ -89,9 +89,9 @@ fn patch(script: &Script, root: &mut PsbValue) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn patch_flatten_text(scn_text: &mut PsbValue, text: &Text) -> anyhow::Result<()> {
-    fn write_flatten(slot: &[Option<&str>], v: &mut PsbValue) -> anyhow::Result<usize> {
-        let Some(&string) = slot.first() else {
+fn patch_flatten_text(scn_text: &mut PsbValue, text: Text) -> anyhow::Result<()> {
+    fn write_flatten(slot: &mut [Option<String>], v: &mut PsbValue) -> anyhow::Result<usize> {
+        let Some(string) = slot.first_mut() else {
             return Ok(0);
         };
 
@@ -99,7 +99,7 @@ fn patch_flatten_text(scn_text: &mut PsbValue, text: &Text) -> anyhow::Result<()
             PsbValue::List(list) => {
                 let mut offset = 0;
                 for child in list {
-                    offset += write_flatten(&slot[offset..], child)?;
+                    offset += write_flatten(&mut slot[offset..], child)?;
                     if offset >= slot.len() {
                         break;
                     }
@@ -109,8 +109,8 @@ fn patch_flatten_text(scn_text: &mut PsbValue, text: &Text) -> anyhow::Result<()
             }
 
             v => {
-                *v = if let Some(string) = string {
-                    PsbValue::String(string.into())
+                *v = if let Some(string) = string.take() {
+                    PsbValue::String(string)
                 } else {
                     PsbValue::Null
                 };
@@ -119,14 +119,7 @@ fn patch_flatten_text(scn_text: &mut PsbValue, text: &Text) -> anyhow::Result<()
         }
     }
 
-    let written = write_flatten(
-        &[
-            text.name.as_deref(),
-            text.display_name.as_deref(),
-            text.text.as_deref(),
-        ],
-        scn_text,
-    )?;
+    let written = write_flatten(&mut [text.name, text.display_name, text.text], scn_text)?;
     if written != 3 {
         bail!("fail to patch scn text correctly. Unsupported or invalid");
     }
