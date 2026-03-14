@@ -7,7 +7,7 @@ use std::{
 use anyhow::{Context, bail};
 use clap::Parser;
 use emote_psb::{mdf::MdfReader, psb::read::PsbFile, value::PsbValue};
-use scn_script_common::{Dialogue, Scene, Script, Select, Text};
+use scn_script_common::{Dialogue, Scene, Script, Text};
 use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
@@ -70,7 +70,7 @@ fn run(app: App) -> anyhow::Result<()> {
                         .map(read_text)
                         .collect::<anyhow::Result<Vec<_>>>()
                         .context("collecting text from scn")?,
-                    selects: scn_scene.selects,
+                    selects: scn_scene.selects.into_iter().map(|sel| sel.text).collect(),
                 })
             })
             .collect::<anyhow::Result<Vec<_>>>()?,
@@ -93,7 +93,12 @@ struct ScnScene {
     pub texts: Vec<PsbValue>,
 
     #[serde(default)]
-    pub selects: Vec<Select>,
+    pub selects: Vec<ScnSelect>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ScnSelect {
+    pub text: String,
 }
 
 fn read_text(text: PsbValue) -> anyhow::Result<Text> {

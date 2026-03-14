@@ -14,7 +14,7 @@ pub struct Scene {
     pub texts: Vec<Text>,
 
     #[serde(default)]
-    pub selects: Vec<Select>,
+    pub selects: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,9 +29,4 @@ pub struct Text {
 pub struct Dialogue {
     pub display_name: Option<String>,
     pub values: Vec<PsbValue>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Select {
-    pub text: String,
 }

@@ -141,7 +141,7 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
             let selects = scn_scene.query_str("selectInfo")?.query_str("selects")?;
             for (i, select) in scene.selects.into_iter().enumerate() {
                 let scn_select = selects.query(i as _)?;
-                *scn_select.query_str("text")? = PsbValue::String(From::from(&select.text));
+                *scn_select.query_str("text")? = PsbValue::String(select);
             }
         }
     }
