@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: 'xp3-tool-${{ steps.commit-sha.outputs.short_sha }}'
+          name: 'scn-tool-${{ steps.commit-sha.outputs.short_sha }}'
           path: |
             target/x86_64-pc-windows-msvc/release/scn-compiler.exe
             target/x86_64-pc-windows-msvc/release/scn-decompiler.exe
