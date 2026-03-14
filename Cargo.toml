@@ -8,7 +8,14 @@ members = [
     "./compiler",
 ]
 
-[workspace.dependencies]
-emote-psb = { path = "../emote-psb-rs" }
+[workspace.package]
+publish = false
+version = "0.6.0"
+authors = ["storycraft <storycraft@pancake.sh>"]
+edition = "2024"
+license = "MIT"
 
+[workspace.dependencies]
 scn-script-common = { path = "./script-common" }
+
+emote-psb = "0.6.0"

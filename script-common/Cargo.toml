@@ -1,8 +1,10 @@
 [package]
 name = "scn-script-common"
-version = "0.1.0"
-authors = ["storycraft <storycraft@pancake.sh>"]
-edition = "2024"
+publish = { workspace = true }
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

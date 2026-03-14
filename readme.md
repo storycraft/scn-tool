@@ -12,3 +12,6 @@ scn-script-extractor.exe <scn_file> [output_file]
 ```
 scn-script-inserter.exe <toml_patch_file> <scn_file> [output_file]
 ```
+
+## License
+The source code and tools are distributed with MIT License

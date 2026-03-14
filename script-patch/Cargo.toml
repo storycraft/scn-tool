@@ -1,8 +1,10 @@
 [package]
 name = "scn-script-patch"
-version = "0.1.0"
-authors = ["storycraft <storycraft@pancake.sh>"]
-edition = "2024"
+publish = { workspace = true }
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 
 [dependencies]
 emote-psb = { workspace = true }
@@ -13,4 +15,3 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde-query = "0.2.0"
 anyhow = "1.0.102"
 serde_json = "1.0.149"
-mimalloc = "0.1.48"
