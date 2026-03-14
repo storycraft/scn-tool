@@ -1,0 +1,54 @@
+name: deploy
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'compiler/**/*'
+      - 'decompiler/**/*'
+      - 'script-common/**/*'
+      - 'script-extractor/**/*'
+      - 'script-patch/**/*'
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Commit SHA
+        id: commit-sha
+        run: |
+          "short_sha=" + "${{ github.sha }}".SubString(0, 8) >> $env:GITHUB_OUTPUT
+
+      - name: Setup rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: 'deploy'
+          cache-on-failure: true
+          cache-all-crates: true
+
+      - name: Build
+        run: cargo build --bins --release --target x86_64-pc-windows-msvc
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'xp3-tool-${{ steps.commit-sha.outputs.short_sha }}'
+          path: |
+            target/x86_64-pc-windows-msvc/release/scn-compiler.exe
+            target/x86_64-pc-windows-msvc/release/scn-decompiler.exe
+            target/x86_64-pc-windows-msvc/release/scn-script-extractor.exe
+            target/x86_64-pc-windows-msvc/release/scn-script-patch.exe
