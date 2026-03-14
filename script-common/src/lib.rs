@@ -1,3 +1,4 @@
+use emote_psb::value::PsbValue;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,8 +20,15 @@ pub struct Scene {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Text {
     pub name: Option<String>,
+
+    #[serde(default)]
+    pub dialogues: Vec<Dialogue>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Dialogue {
     pub display_name: Option<String>,
-    pub text: Option<String>,
+    pub values: Vec<PsbValue>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

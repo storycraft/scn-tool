@@ -7,5 +7,7 @@ edition = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+emote-psb = { workspace = true }
+
 serde = { version = "1.0.228", features = ["derive"] }
 serde-query = "0.2.0"

@@ -379,6 +379,7 @@ dependencies = [
 name = "scn-script-common"
 version = "0.6.0"
 dependencies = [
+ "emote-psb",
  "serde",
  "serde-query",
 ]

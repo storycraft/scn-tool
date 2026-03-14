@@ -4,10 +4,10 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use clap::Parser;
 use emote_psb::{psb::read::PsbFile, value::PsbValue};
-use scn_script_common::{Scene, Script, Select, Text};
+use scn_script_common::{Dialogue, Scene, Script, Select, Text};
 use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
@@ -61,7 +61,7 @@ fn run(app: App) -> anyhow::Result<()> {
                     texts: scn_scene
                         .texts
                         .into_iter()
-                        .map(read_flatten_text)
+                        .map(read_text)
                         .collect::<anyhow::Result<Vec<_>>>()
                         .context("collecting text from scn")?,
                     selects: scn_scene.selects,
@@ -90,48 +90,69 @@ struct ScnScene {
     pub selects: Vec<Select>,
 }
 
-fn read_flatten_text(text: PsbValue) -> anyhow::Result<Text> {
-    fn read_flatten(slot: &mut [Option<String>], v: PsbValue) -> anyhow::Result<usize> {
-        if slot.is_empty() {
-            return Ok(0);
-        }
-
-        match v {
-            PsbValue::Null => {
-                slot[0] = None;
-                Ok(1)
-            }
-
-            PsbValue::String(string) => {
-                slot[0] = Some(string);
-                Ok(1)
-            }
-
-            PsbValue::List(list) => {
-                let mut offset = 0;
-                for child in list {
-                    offset += read_flatten(&mut slot[offset..], child)?;
-                    if offset >= slot.len() {
-                        break;
-                    }
-                }
-
-                Ok(offset)
-            }
-
-            _ => bail!("invalid or unsupported scn text"),
-        }
+fn read_text(text: PsbValue) -> anyhow::Result<Text> {
+    if let Some(text) = read_extract_v2(&text) {
+        return Ok(text);
     }
 
-    let mut slot = [const { None }; 3];
-    if read_flatten(&mut slot, text)? != slot.len() {
-        bail!("fail to read scn text correctly. Unsupported or invalid");
+    if let Some(text) = read_extract_v1(&text) {
+        return Ok(text);
     }
 
-    let [name, display_name, text] = slot;
-    Ok(Text {
+    bail!("fail to read scn text correctly. Unsupported or invalid")
+}
+
+fn read_option_str(v: &PsbValue) -> Option<Option<String>> {
+    match v {
+        PsbValue::Null => Some(None),
+        PsbValue::String(display_name) => Some(Some(display_name.to_string())),
+        _ => return None,
+    }
+}
+
+fn read_extract_v1(text: &PsbValue) -> Option<Text> {
+    let PsbValue::List(list) = text else {
+        return None;
+    };
+    let name = read_option_str(list.get(0)?)?;
+    let display_name = read_option_str(list.get(1)?)?;
+
+    let text = list.get(2)?.clone();
+    Some(Text {
         name,
-        display_name,
-        text,
+        dialogues: vec![Dialogue {
+            display_name,
+            values: vec![text],
+        }],
     })
+}
+
+fn read_extract_v2(text: &PsbValue) -> Option<Text> {
+    fn inner<const OFFSET: usize>(text: &PsbValue) -> Option<Text> {
+        let PsbValue::List(list) = text else {
+            return None;
+        };
+        let name = read_option_str(list.get(0)?)?;
+
+        let PsbValue::List(list) = list.get(1 + OFFSET)? else {
+            return None;
+        };
+
+        let mut dialogues = Vec::with_capacity(list.len());
+        for item in list {
+            let PsbValue::List(item) = item else {
+                return None;
+            };
+
+            let dialogue = Dialogue {
+                display_name: read_option_str(item.get(0)?)?,
+                values: item[1..].iter().cloned().collect(),
+            };
+            dialogues.push(dialogue);
+        }
+
+        Some(Text { name, dialogues })
+    }
+
+    inner::<0>(text).or_else(|| inner::<1>(text))
 }

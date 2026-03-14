@@ -72,7 +72,7 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
             let texts = scn_scene.query_str("texts")?;
             for (i, text) in scene.texts.into_iter().enumerate() {
                 let scn_text = texts.query(i as _)?;
-                patch_flatten_text(scn_text, text).context("applying text patch to scn")?;
+                patch_text(text, scn_text).context("applying text patch to scn")?;
             }
         }
 
@@ -89,42 +89,65 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn patch_flatten_text(scn_text: &mut PsbValue, text: Text) -> anyhow::Result<()> {
-    fn write_flatten(slot: &mut [Option<String>], v: &mut PsbValue) -> anyhow::Result<usize> {
-        let Some(string) = slot.first_mut() else {
-            return Ok(0);
+fn patch_text(text: Text, scn_text: &mut PsbValue) -> anyhow::Result<()> {
+    if patch_v2(&text, scn_text).is_some() {
+        return Ok(());
+    }
+
+    if patch_v1(&text, scn_text).is_some() {
+        return Ok(());
+    }
+
+    bail!("fail to patch scn text correctly. Unsupported or invalid")
+}
+
+fn to_opt_string(string: Option<&str>) -> PsbValue {
+    match string {
+        Some(string) => PsbValue::String(string.to_string()),
+        None => PsbValue::Null,
+    }
+}
+
+fn patch_v1(text: &Text, scn_text: &mut PsbValue) -> Option<()> {
+    let PsbValue::List(list) = scn_text else {
+        return None;
+    };
+
+    if list.len() < 3 {
+        return None;
+    }
+
+    let dialogue = text.dialogues.get(0)?;
+    let dialogue_text = dialogue.values.get(0)?;
+    list[0] = to_opt_string(text.name.as_deref());
+    list[1] = to_opt_string(dialogue.display_name.as_deref());
+    list[2] = dialogue_text.clone();
+    Some(())
+}
+
+fn patch_v2(text: &Text, scn_text: &mut PsbValue) -> Option<()> {
+    fn inner<const OFFSET: usize>(text: &Text, scn_text: &mut PsbValue) -> Option<()> {
+        let PsbValue::List(list) = scn_text else {
+            return None;
         };
 
-        match v {
-            PsbValue::List(list) => {
-                let mut offset = 0;
-                for child in list {
-                    offset += write_flatten(&mut slot[offset..], child)?;
-                    if offset >= slot.len() {
-                        break;
-                    }
-                }
-
-                Ok(offset)
-            }
-
-            v => {
-                *v = if let Some(string) = string.take() {
-                    PsbValue::String(string)
-                } else {
-                    PsbValue::Null
-                };
-                Ok(1)
-            }
+        let PsbValue::List(scn_dialogues) = list.get_mut(1 + OFFSET)? else {
+            return None;
+        };
+        for (scn_dialogue, dialogue) in scn_dialogues.iter_mut().zip(&text.dialogues) {
+            let PsbValue::List(scn_dialogue) = scn_dialogue else {
+                return None;
+            };
+            scn_dialogue.clear();
+            scn_dialogue.push(to_opt_string(dialogue.display_name.as_deref()));
+            scn_dialogue.extend(dialogue.values.iter().cloned());
         }
+
+        list[0] = to_opt_string(text.name.as_deref());
+        Some(())
     }
 
-    let written = write_flatten(&mut [text.name, text.display_name, text.text], scn_text)?;
-    if written != 3 {
-        bail!("fail to patch scn text correctly. Unsupported or invalid");
-    }
-
-    Ok(())
+    inner::<0>(text, scn_text).or_else(|| inner::<1>(text, scn_text))
 }
 
 trait QueryExt {
