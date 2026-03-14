@@ -1,12 +1,12 @@
 use std::{
     fs::{self, File},
-    io::{BufReader, BufWriter},
+    io::{BufReader, BufWriter, Cursor, Read, Seek, SeekFrom},
     path::PathBuf,
 };
 
 use anyhow::{Context, bail};
 use clap::Parser;
-use emote_psb::{psb::read::PsbFile, value::PsbValue};
+use emote_psb::{mdf::MdfReader, psb::read::PsbFile, value::PsbValue};
 use scn_script_common::{Dialogue, Scene, Script, Select, Text};
 use serde::{Deserialize, Serialize};
 
@@ -40,16 +40,22 @@ fn run(app: App) -> anyhow::Result<()> {
         fs::create_dir_all(parent).context("creating output directory")?;
     }
 
-    let mut input_scn = PsbFile::open(BufReader::new(
-        File::open(&input_path).context("cannot open input file")?,
-    ))
-    .context("input file is invalid scn")?;
+    let mut input = BufReader::new(File::open(&input_path).context("cannot open input file")?);
+    let scn_script: ScnScript = if let Ok(mut mdf) = MdfReader::open(&mut input) {
+        let mut buf = vec![];
+        mdf.read_to_end(&mut buf)?;
+
+        PsbFile::open(Cursor::new(buf))
+            .context("input file is invalid scn(mdf)")?
+            .deserialize_root()
+    } else {
+        input.seek(SeekFrom::Start(0))?;
+        PsbFile::open(input)
+            .context("input file is invalid scn")?
+            .deserialize_root()
+    }?;
 
     let out = BufWriter::new(File::create(output_path).context("creating output file")?);
-
-    let scn_script = input_scn
-        .deserialize_root::<ScnScript>()
-        .context("deserializing scn")?;
 
     let script = Script {
         scenes: scn_script
@@ -106,7 +112,7 @@ fn read_option_str(v: &PsbValue) -> Option<Option<String>> {
     match v {
         PsbValue::Null => Some(None),
         PsbValue::String(display_name) => Some(Some(display_name.to_string())),
-        _ => return None,
+        _ => None,
     }
 }
 
@@ -114,7 +120,7 @@ fn read_extract_v1(text: &PsbValue) -> Option<Text> {
     let PsbValue::List(list) = text else {
         return None;
     };
-    let name = read_option_str(list.get(0)?)?;
+    let name = read_option_str(list.first()?)?;
     let display_name = read_option_str(list.get(1)?)?;
 
     let text = list.get(2)?.clone();
@@ -132,7 +138,7 @@ fn read_extract_v2(text: &PsbValue) -> Option<Text> {
         let PsbValue::List(list) = text else {
             return None;
         };
-        let name = read_option_str(list.get(0)?)?;
+        let name = read_option_str(list.first()?)?;
 
         let PsbValue::List(list) = list.get(1 + OFFSET)? else {
             return None;
@@ -145,8 +151,8 @@ fn read_extract_v2(text: &PsbValue) -> Option<Text> {
             };
 
             let dialogue = Dialogue {
-                display_name: read_option_str(item.get(0)?)?,
-                values: item[1..].iter().cloned().collect(),
+                display_name: read_option_str(item.first()?)?,
+                values: item[1..].to_vec(),
             };
             dialogues.push(dialogue);
         }
