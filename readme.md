@@ -1,16 +1,15 @@
 # scn-tool
-
 M2 scn scenario file text & string extract / insert tools.
 
 ## Usage
-### Extracter
+### Extract
 ```
 scn-script-extractor.exe <scn_file> [output_file]
 ```
 
-### Inserter
+### Patch
 ```
-scn-script-inserter.exe <toml_patch_file> <scn_file> [output_file]
+scn-script-patch.exe <json_patch_file> <scn_file> [output_file]
 ```
 
 ## License
