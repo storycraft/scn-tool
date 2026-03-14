@@ -6,10 +6,10 @@ use emote_psb::{
     value::{PsbValue, de},
 };
 use scn_script_common::{Script, Text};
-use serde::de::DeserializeOwned;
+use serde::{Serialize, de::DeserializeOwned};
 use std::{
     fs::File,
-    io::{BufReader, BufWriter, Cursor, Read, Seek, SeekFrom, Write},
+    io::{BufRead, BufReader, BufWriter, Cursor, Read, Seek, SeekFrom, Write},
     path::PathBuf,
 };
 
@@ -71,25 +71,51 @@ fn run(app: App) -> anyhow::Result<()> {
 
     let out_file = BufWriter::new(File::create(output_path).context("creating output scn file")?);
     match psb {
-        PsbInput::Mdf(psb) => {
+        PsbInput::Mdf(mut psb) => {
             let mut buf = vec![];
-            PsbWriter::new(psb.version, psb.encrypted, &root, Cursor::new(&mut buf))
-                .context("writing patched scn(mdf) file")?
-                .finish()
-                .context("finishing patched scn(mdf) file")?;
+            write_psb(&mut psb, &root, Cursor::new(&mut buf))?;
 
             let mut mdf = MdfWriter::new(out_file, 1)?;
             mdf.write_all(&buf)?;
             mdf.finish().context("packing mdf file")?;
         }
-        PsbInput::Psb(psb) => {
-            PsbWriter::new(psb.version, psb.encrypted, &root, out_file)
-                .context("writing patched scn file")?
-                .finish()
-                .context("finishing patched scn file")?;
+        PsbInput::Psb(mut psb) => {
+            write_psb(&mut psb, &root, out_file)?;
         }
     }
 
+    Ok(())
+}
+
+fn write_psb(
+    psb: &mut PsbFile<impl BufRead + Seek>,
+    root: &impl Serialize,
+    out: impl Write + Seek,
+) -> anyhow::Result<()> {
+    let mut writer = PsbWriter::new(psb.version, psb.encrypted, &root, out)
+        .context("writing patched scn file")?;
+
+    for i in 0..psb.resources() {
+        let Some(mut res) = psb.open_resource(i)? else {
+            unreachable!()
+        };
+        let mut buf = vec![];
+        res.read_to_end(&mut buf)?;
+
+        writer.add_resource(Cursor::new(buf))?;
+    }
+
+    for i in 0..psb.extra_resources() {
+        let Some(mut res) = psb.open_extra_resource(i)? else {
+            unreachable!()
+        };
+        let mut buf = vec![];
+        res.read_to_end(&mut buf)?;
+
+        writer.add_extra(Cursor::new(buf))?;
+    }
+
+    writer.finish().context("finishing patched scn file")?;
     Ok(())
 }
 
