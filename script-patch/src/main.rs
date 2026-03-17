@@ -218,18 +218,6 @@ trait QueryExt {
 impl QueryExt for PsbValue {
     fn query(&mut self, index: isize) -> anyhow::Result<&mut Self> {
         match self {
-            Self::Object(obj) => {
-                let i = if index < 0 {
-                    obj.len().wrapping_add_signed(index)
-                } else {
-                    index as _
-                };
-
-                Ok(obj
-                    .get_index_mut(i)
-                    .with_context(|| format!("invalid path: {} in object", index))?
-                    .1)
-            }
             Self::List(list) => {
                 let i = if index < 0 {
                     list.len().wrapping_add_signed(index)
