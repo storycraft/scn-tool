@@ -175,9 +175,9 @@ dependencies = [
 
 [[package]]
 name = "emote-psb"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cfbf23020672f78e16fca73b0aac4392dc6648ed2b41d12baa051376fc875b6"
+checksum = "0f56851601a9468ba3e2f80356d35b6a392007bb2947dc98b8e260c1863e5c6d"
 dependencies = [
  "adler2",
  "byteorder",
@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "scn-compiler"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "scn-decompiler"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "scn-script-common"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "emote-psb",
  "serde",
@@ -386,7 +386,7 @@ dependencies = [
 
 [[package]]
 name = "scn-script-extractor"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -399,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "scn-script-patch"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "clap",
