@@ -10,7 +10,7 @@ members = [
 
 [workspace.package]
 publish = false
-version = "0.6.1"
+version = "0.6.2"
 authors = ["storycraft <storycraft@pancake.sh>"]
 edition = "2024"
 license = "MIT"
@@ -18,4 +18,4 @@ license = "MIT"
 [workspace.dependencies]
 scn-script-common = { path = "./script-common" }
 
-emote-psb = "0.7.0"
+emote-psb = "0.7.1"
