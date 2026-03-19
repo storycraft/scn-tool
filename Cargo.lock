@@ -175,9 +175,9 @@ dependencies = [
 
 [[package]]
 name = "emote-psb"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f56851601a9468ba3e2f80356d35b6a392007bb2947dc98b8e260c1863e5c6d"
+checksum = "7887a91e991c64e662aea8d49a044e71b6632e7987c027b78f97c1e9829e74f6"
 dependencies = [
  "adler2",
  "byteorder",
