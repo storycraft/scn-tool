@@ -10,7 +10,7 @@ members = [
 
 [workspace.package]
 publish = false
-version = "0.6.2"
+version = "0.6.3"
 authors = ["storycraft <storycraft@pancake.sh>"]
 edition = "2024"
 license = "MIT"
