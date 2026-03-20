@@ -137,8 +137,8 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
         }
 
         if !scene.selects.is_empty() {
-            // query selectInfo/selects
-            let selects = scn_scene.query_str("selectInfo")?.query_str("selects")?;
+            // query selects
+            let selects = scn_scene.query_str("selects")?;
             for (i, select) in scene.selects.into_iter().enumerate() {
                 let scn_select = selects.query(i as _)?;
                 *scn_select.query_str("text")? = select.into();
