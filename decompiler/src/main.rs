@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufReader, BufWriter},
+    io::{BufWriter, Cursor, Read},
     path::PathBuf,
 };
 
@@ -34,11 +34,11 @@ fn run(app: App) -> anyhow::Result<()> {
         path
     });
 
-    let mut psb = PsbFile::open(BufReader::new(
-        File::open(&app.scn_file).context("input scn file not found")?,
-    ))
-    .context("scn file reading")?;
-
+    let mut file = vec![];
+    File::open(&app.scn_file)
+        .context("input scn file not found")?
+        .read_to_end(&mut file)?;
+    let mut psb = PsbFile::open(Cursor::new(&file)).context("scn file reading")?;
     let output = BufWriter::new(File::create(&output_path).context("creating output file")?);
     serde_transcode::transcode(
         &mut psb.root_deserializer()?,

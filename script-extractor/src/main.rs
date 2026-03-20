@@ -40,20 +40,19 @@ fn run(app: App) -> anyhow::Result<()> {
         fs::create_dir_all(parent).context("creating output directory")?;
     }
 
-    let mut input = BufReader::new(File::open(&input_path).context("cannot open input file")?);
-    let scn_script: ScnScript = if let Ok(mut mdf) = MdfReader::open(&mut input) {
-        let mut buf = vec![];
-        mdf.read_to_end(&mut buf)?;
-
-        PsbFile::open(Cursor::new(buf))
-            .context("input file is invalid scn(mdf)")?
-            .deserialize_root()
+    let mut input = File::open(&input_path).context("cannot open input file")?;
+    let mut buf = vec![];
+    if let Ok(mut mdf) = MdfReader::open(BufReader::new(&mut input)) {
+        mdf.read_to_end(&mut buf)
+            .context("uncompressing mdf file")?;
     } else {
         input.seek(SeekFrom::Start(0))?;
-        PsbFile::open(input)
-            .context("input file is invalid scn")?
-            .deserialize_root()
-    }?;
+        input.read_to_end(&mut buf).context("reading scn file")?;
+    };
+
+    let scn_script: ScnScript = PsbFile::open(Cursor::new(buf))
+        .context("input file is invalid scn")?
+        .deserialize_root()?;
 
     let out = BufWriter::new(File::create(output_path).context("creating output file")?);
 
