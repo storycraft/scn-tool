@@ -18,4 +18,4 @@ license = "MIT"
 [workspace.dependencies]
 scn-script-common = { path = "./script-common" }
 
-emote-psb = "0.7.2"
+emote-psb = "0.8.0"

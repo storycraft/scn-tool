@@ -125,7 +125,7 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
     for (i, scene) in script.scenes.into_iter().enumerate() {
         let scn_scene = scenes.query(i as _)?;
         // set title
-        *scn_scene.query_str("title")? = PsbValue::String(From::from(&scene.title));
+        *scn_scene.query_str("title")? = scene.title.into();
 
         if !scene.texts.is_empty() {
             // query texts
@@ -141,7 +141,7 @@ fn patch(script: Script, root: &mut PsbValue) -> anyhow::Result<()> {
             let selects = scn_scene.query_str("selectInfo")?.query_str("selects")?;
             for (i, select) in scene.selects.into_iter().enumerate() {
                 let scn_select = selects.query(i as _)?;
-                *scn_select.query_str("text")? = PsbValue::String(select);
+                *scn_select.query_str("text")? = select.into();
             }
         }
     }
@@ -163,7 +163,7 @@ fn patch_text(text: Text, scn_text: &mut PsbValue) -> anyhow::Result<()> {
 
 fn to_opt_string(string: Option<&str>) -> PsbValue {
     match string {
-        Some(string) => PsbValue::String(string.to_string()),
+        Some(string) => string.into(),
         None => PsbValue::Null,
     }
 }
