@@ -3,10 +3,10 @@ use clap::Parser;
 use emote_psb::{
     mdf::{MdfReader, MdfWriter},
     psb::{read::PsbFile, write::PsbWriter},
-    value::{PsbValue, de},
+    value::PsbValue,
 };
 use scn_script_common::{Script, Text};
-use serde::{Serialize, de::DeserializeOwned};
+use serde::Serialize;
 use std::{
     fs::File,
     io::{BufRead, BufReader, BufWriter, Cursor, Read, Seek, SeekFrom, Write},
@@ -26,33 +26,89 @@ fn main() {
     }
 }
 
-enum PsbInput<'a> {
-    Mdf(PsbFile<Cursor<Vec<u8>>>),
-    Psb(PsbFile<&'a mut BufReader<File>>),
+struct PsbInput {
+    mdf: bool,
+    psb: PsbFile<Cursor<Vec<u8>>>,
 }
 
-impl PsbInput<'_> {
-    fn deserialize_root<V: DeserializeOwned>(&mut self) -> Result<V, de::Error> {
-        match self {
-            PsbInput::Mdf(psb) => psb.deserialize_root(),
-            PsbInput::Psb(psb) => psb.deserialize_root(),
+impl PsbInput {
+    pub fn open(mut stream: impl BufRead + Seek) -> anyhow::Result<Self> {
+        let mut buf = vec![];
+        let mdf = if let Ok(mut mdf) = MdfReader::open(&mut stream) {
+            mdf.read_to_end(&mut buf).context("reading mdf file")?;
+            true
+        } else {
+            stream.seek(SeekFrom::Start(0))?;
+            stream.read_to_end(&mut buf).context("reading scn file")?;
+            false
+        };
+
+        Ok(Self {
+            mdf,
+            psb: PsbFile::open(Cursor::new(buf)).context("opening scn")?,
+        })
+    }
+
+    pub fn write(
+        &mut self,
+        stream: impl Write + Seek,
+        root: &impl Serialize,
+    ) -> anyhow::Result<()> {
+        fn write_psb(
+            psb: &mut PsbFile<impl BufRead + Seek>,
+            root: &impl Serialize,
+            out: impl Write + Seek,
+        ) -> anyhow::Result<()> {
+            let mut writer = PsbWriter::new(psb.version, psb.encrypted, &root, out)
+                .context("writing patched scn file")?;
+
+            for i in 0..psb.resources() {
+                let Some(mut res) = psb.open_resource(i)? else {
+                    unreachable!()
+                };
+                let mut buf = vec![];
+                res.read_to_end(&mut buf)?;
+
+                writer.add_resource(Cursor::new(buf))?;
+            }
+
+            for i in 0..psb.extra_resources() {
+                let Some(mut res) = psb.open_extra_resource(i)? else {
+                    unreachable!()
+                };
+                let mut buf = vec![];
+                res.read_to_end(&mut buf)?;
+
+                writer.add_extra(Cursor::new(buf))?;
+            }
+
+            writer.finish().context("finishing patched scn file")?;
+            Ok(())
         }
+
+        match self.mdf {
+            true => {
+                let mut buf = vec![];
+                write_psb(&mut self.psb, root, Cursor::new(&mut buf))?;
+
+                let mut mdf = MdfWriter::new(stream, 1)?;
+                mdf.write_all(&buf)?;
+                mdf.finish().context("packing mdf file")?;
+            }
+            false => {
+                write_psb(&mut self.psb, root, stream)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
 fn run(app: App) -> anyhow::Result<()> {
-    let mut psb_input =
-        BufReader::new(File::open(&app.scn_file).context("scn file does not exist")?);
-
-    let mut psb = if let Ok(mut mdf) = MdfReader::open(&mut psb_input) {
-        let mut buf = vec![];
-        mdf.read_to_end(&mut buf)?;
-        PsbInput::Mdf(PsbFile::open(Cursor::new(buf)).context("opening scn(mdf) file")?)
-    } else {
-        psb_input.seek(SeekFrom::Start(0))?;
-        PsbInput::Psb(PsbFile::open(&mut psb_input).context("opening scn file")?)
-    };
-    let mut root = psb.deserialize_root::<PsbValue>()?;
+    let mut input = PsbInput::open(BufReader::new(
+        File::open(&app.scn_file).context("scn file does not exist")?,
+    ))?;
+    let mut root = input.psb.deserialize_root::<PsbValue>()?;
 
     let output_path = app.output_file.clone().unwrap_or_else(|| {
         let mut path = app.scn_file.clone();
@@ -69,53 +125,10 @@ fn run(app: App) -> anyhow::Result<()> {
     .context("reading patch file")?;
     patch(script, &mut root).context("patching scn")?;
 
-    let out_file = BufWriter::new(File::create(output_path).context("creating output scn file")?);
-    match psb {
-        PsbInput::Mdf(mut psb) => {
-            let mut buf = vec![];
-            write_psb(&mut psb, &root, Cursor::new(&mut buf))?;
-
-            let mut mdf = MdfWriter::new(out_file, 1)?;
-            mdf.write_all(&buf)?;
-            mdf.finish().context("packing mdf file")?;
-        }
-        PsbInput::Psb(mut psb) => {
-            write_psb(&mut psb, &root, out_file)?;
-        }
-    }
-
-    Ok(())
-}
-
-fn write_psb(
-    psb: &mut PsbFile<impl BufRead + Seek>,
-    root: &impl Serialize,
-    out: impl Write + Seek,
-) -> anyhow::Result<()> {
-    let mut writer = PsbWriter::new(psb.version, psb.encrypted, &root, out)
-        .context("writing patched scn file")?;
-
-    for i in 0..psb.resources() {
-        let Some(mut res) = psb.open_resource(i)? else {
-            unreachable!()
-        };
-        let mut buf = vec![];
-        res.read_to_end(&mut buf)?;
-
-        writer.add_resource(Cursor::new(buf))?;
-    }
-
-    for i in 0..psb.extra_resources() {
-        let Some(mut res) = psb.open_extra_resource(i)? else {
-            unreachable!()
-        };
-        let mut buf = vec![];
-        res.read_to_end(&mut buf)?;
-
-        writer.add_extra(Cursor::new(buf))?;
-    }
-
-    writer.finish().context("finishing patched scn file")?;
+    input.write(
+        BufWriter::new(File::create(output_path).context("creating output scn file")?),
+        &root,
+    )?;
     Ok(())
 }
 
